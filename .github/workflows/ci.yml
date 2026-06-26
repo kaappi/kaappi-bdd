@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Build Kaappi
+        run: |
+          git clone --depth 1 https://github.com/kaappi/kaappi.git /tmp/kaappi
+          cd /tmp/kaappi
+          zig build -Doptimize=ReleaseSafe
+          sudo cp zig-out/bin/kaappi /usr/local/bin/
+
+      - name: Run tests
+        run: kaappi --lib-path ./lib tests/test-bdd.scm
+
+      - name: Run examples
+        run: |
+          kaappi --lib-path ./lib examples/basic.scm
+          kaappi --lib-path ./lib examples/hooks.scm
